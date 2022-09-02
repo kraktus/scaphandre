@@ -50,6 +50,20 @@ fn get_sensor(matches: &ArgMatches) -> Box<dyn Sensor> {
     Box::new(sensor)
 }
 
+macro_rules! declare_exporters {
+    ($($name:tt, $exporter:tt,)+) => {$(
+        if let Some(exporter_parameters) = matches.subcommand_matches($name) {
+            exporter_match_flag = true;
+            if header {
+                scaphandre_header($name);
+            }
+            exporter_parameters = stdout_exporter_parameters.clone();
+            let mut exporter = $exporter::new(sensor_boxed);
+            exporter.run(exporter_parameters);
+    }
+    )+}
+}
+
 /// Matches the sensor and exporter name and options requested from the command line and
 /// creates the appropriate instances. Launchs the standardized entrypoint of
 /// the choosen exporter: run()
@@ -61,53 +75,20 @@ pub fn run(matches: ArgMatches) {
     let exporter_parameters;
 
     let mut header = true;
+    let mut exporter_match_flag = false;
     if matches.is_present("no-header") {
         header = false;
     }
 
-    if let Some(stdout_exporter_parameters) = matches.subcommand_matches("stdout") {
-        if header {
-            scaphandre_header("stdout");
-        }
-        exporter_parameters = stdout_exporter_parameters.clone();
-        let mut exporter = StdoutExporter::new(sensor_boxed);
-        exporter.run(exporter_parameters);
-    } else if let Some(json_exporter_parameters) = matches.subcommand_matches("json") {
-        if header {
-            scaphandre_header("json");
-        }
-        exporter_parameters = json_exporter_parameters.clone();
-        let mut exporter = JSONExporter::new(sensor_boxed);
-        exporter.run(exporter_parameters);
-    } else if let Some(riemann_exporter_parameters) = matches.subcommand_matches("riemann") {
-        if header {
-            scaphandre_header("riemann");
-        }
-        exporter_parameters = riemann_exporter_parameters.clone();
-        let mut exporter = RiemannExporter::new(sensor_boxed);
-        exporter.run(exporter_parameters);
-    } else if let Some(prometheus_exporter_parameters) = matches.subcommand_matches("prometheus") {
-        if header {
-            scaphandre_header("prometheus");
-        }
-        exporter_parameters = prometheus_exporter_parameters.clone();
-        let mut exporter = PrometheusExporter::new(sensor_boxed);
-        exporter.run(exporter_parameters);
-    } else if let Some(qemu_exporter_parameters) = matches.subcommand_matches("qemu") {
-        if header {
-            scaphandre_header("qemu");
-        }
-        exporter_parameters = qemu_exporter_parameters.clone();
-        let mut exporter = QemuExporter::new(sensor_boxed);
-        exporter.run(exporter_parameters);
-    } else if let Some(warp10_exporter_parameters) = matches.subcommand_matches("warp10") {
-        if header {
-            scaphandre_header("warp10");
-        }
-        exporter_parameters = warp10_exporter_parameters.clone();
-        let mut exporter = Warp10Exporter::new(sensor_boxed);
-        exporter.run(exporter_parameters);
-    } else {
+    declare_exporters!(
+        ("stdout", StdoutExporter),
+        ("json", JSONExporter),
+        ("riemann", RiemannExporter),
+        ("prometheus", PrometheusExporter),
+        ("qemu", Warp10Exporter),
+        ("warp10", QemuExporter),
+    );
+    if !exporter_match_flag {
         error!("Couldn't determine which exporter has been chosen.");
     }
 }
