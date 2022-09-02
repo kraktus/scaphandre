@@ -92,10 +92,10 @@ pub fn run(matches: ArgMatches) {
         "prometheus",
         PrometheusExporter,
         "qemu",
-        Warp10Exporter,
+        QemuExporter,
     );
     #[cfg(feature = "warp10")]
-    declare_exporters!("warp10", QemuExporter,);
+    declare_exporters!("warp10", Warp10Exporter,);
     if !exporter_match_flag {
         error!("Couldn't determine which exporter has been chosen.");
     }
