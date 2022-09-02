@@ -92,15 +92,16 @@ pub fn run(matches: ArgMatches) {
         "qemu",
         QemuExporter,
     );
-    #[cfg(feature = "warp10")]
-    declare_exporters!(
-        header,
-        sensor_boxed,
-        exporter_match_flag,
-        matches,
-        "warp10",
-        Warp10Exporter,
-    );
+    // FIXME
+    // #[cfg(feature = "warp10")]
+    // declare_exporters!(
+    //     header,
+    //     sensor_boxed,
+    //     exporter_match_flag,
+    //     matches,
+    //     "warp10",
+    //     Warp10Exporter,
+    // );
     if !exporter_match_flag {
         error!("Couldn't determine which exporter has been chosen.");
     }
