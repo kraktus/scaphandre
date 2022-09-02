@@ -60,7 +60,7 @@ macro_rules! declare_exporters {
                 scaphandre_header($name);
             }
             let mut exporter = $exporter::new($sensor_boxed);
-            exporter.run(exporter_parameters);
+            exporter.run(exporter_parameters.clone());
     }
     )+}
 }
