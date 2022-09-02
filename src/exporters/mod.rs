@@ -585,13 +585,13 @@ impl MetricGenerator {
         }
     }
 
-    /// If *self.watch_docker* is true and *self.docker_client* is Some
+    /// If *self.cd.watch_docker* is true and *self.docker_client* is Some
     /// gets the list of docker containers running on the machine, thanks
     /// to *self.docker_client*. Stores the resulting vector as *self.cd.containers*.
     /// Updates *self.cd.containers_last_check* to the current timestamp, if the
     /// operation is successful.
     fn gen_docker_containers_basic_metadata(&mut self) {
-        if self.watch_docker && self.docker_client.is_some() {
+        if self.cd.watch_docker && self.docker_client.is_some() {
             if let Some(docker) = self.docker_client.as_mut() {
                 if let Ok(containers_result) = docker.get_containers(false) {
                     self.cd.containers = containers_result;
@@ -604,23 +604,23 @@ impl MetricGenerator {
         }
     }
 
-    /// If *self.watch_kubernetes* is true,
+    /// If *self.cd.watch_kubernetes* is true,
     /// queries the local kubernetes API (if this is a kubernetes cluster node)
-    /// and retrieves the list of pods running on this node, thanks to *self.kubernetes_client*.
-    /// Stores the result as *self.pods* and updates *self.pods_last_check* if the operation is successfull.
+    /// and retrieves the list of pods running on this node, thanks to *self.cd.kubernetes_client*.
+    /// Stores the result as *self.cd.pods* and updates *self.cd.pods_last_check* if the operation is successfull.
     fn gen_kubernetes_pods_basic_metadata(&mut self) {
-        if self.watch_kubernetes {
-            if let Some(kubernetes) = self.kubernetes_client.as_mut() {
+        if self.cd.watch_kubernetes {
+            if let Some(kubernetes) = self.cd.kubernetes_client.as_mut() {
                 if let Ok(pods_result) = kubernetes.list_pods("".to_string()) {
-                    self.pods = pods_result;
-                    debug!("Found {} pods", &self.pods.len());
+                    self.cd.pods = pods_result;
+                    debug!("Found {} pods", &self.cd.pods.len());
                 } else {
                     info!("Failed getting pods list, despite client seems ok.");
                 }
             } else {
                 debug!("Kubernetes socket is not some.");
             }
-            self.pods_last_check = current_system_time_since_epoch().as_secs().to_string();
+            self.cd.pods_last_check = current_system_time_since_epoch().as_secs().to_string();
         }
     }
 
@@ -629,7 +629,7 @@ impl MetricGenerator {
         #[feature = "containers"]
         if self.cd.watch_containers {
             let now = current_system_time_since_epoch().as_secs().to_string();
-            if self.watch_docker && self.docker_client.is_some() {
+            if self.cd.watch_docker && self.docker_client.is_some() {
                 let last_check = self.cd.containers_last_check.clone();
                 if last_check.is_empty() {
                     match self.docker_client.as_mut().unwrap().get_version() {
@@ -639,7 +639,7 @@ impl MetricGenerator {
                         }
                         Err(error) => {
                             info!("Couldn't query the docker socket: {}", error);
-                            self.watch_docker = false;
+                            self.cd.watch_docker = false;
                         }
                     }
                 } else {
@@ -661,12 +661,12 @@ impl MetricGenerator {
                 self.cd.containers_last_check =
                     current_system_time_since_epoch().as_secs().to_string();
             }
-            if self.watch_kubernetes && self.kubernetes_client.is_some() {
-                if self.pods_last_check.is_empty() {
+            if self.cd.watch_kubernetes && self.cd.kubernetes_client.is_some() {
+                if self.cd.pods_last_check.is_empty() {
                     self.gen_kubernetes_pods_basic_metadata();
                     info!("First check done on pods.");
                 }
-                let last_check = self.pods_last_check.clone();
+                let last_check = self.cd.pods_last_check.clone();
                 if (now.parse::<i32>().unwrap() - last_check.parse::<i32>().unwrap()) > 20 {
                     info!(
                         "Just refreshed pod list ! last: {} now: {}, diff: {}",
@@ -686,7 +686,7 @@ impl MetricGenerator {
             let mut attributes = HashMap::new();
 
             #[cfg(feature = "containers")]
-            if self.cd.watch_containers && (!self.cd.containers.is_empty() || !self.pods.is_empty()) {
+            if self.cd.watch_containers && (!self.cd.containers.is_empty() || !self.cd.pods.is_empty()) {
                 let container_data = self
                     .topology
                     .proc_tracker
@@ -694,7 +694,7 @@ impl MetricGenerator {
                         pid,
                         &self.cd.containers,
                         self.docker_version.clone(),
-                        &self.pods,
+                        &self.cd.pods,
                         //self.kubernetes_version.clone(),
                     );
 
