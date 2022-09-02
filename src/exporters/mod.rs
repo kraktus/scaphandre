@@ -587,15 +587,15 @@ impl MetricGenerator {
 
     /// If *self.watch_docker* is true and *self.docker_client* is Some
     /// gets the list of docker containers running on the machine, thanks
-    /// to *self.docker_client*. Stores the resulting vector as *self.containers*.
-    /// Updates *self.containers_last_check* to the current timestamp, if the
+    /// to *self.docker_client*. Stores the resulting vector as *self.cd.containers*.
+    /// Updates *self.cd.containers_last_check* to the current timestamp, if the
     /// operation is successful.
     fn gen_docker_containers_basic_metadata(&mut self) {
         if self.watch_docker && self.docker_client.is_some() {
             if let Some(docker) = self.docker_client.as_mut() {
                 if let Ok(containers_result) = docker.get_containers(false) {
-                    self.containers = containers_result;
-                    self.containers_last_check =
+                    self.cd.containers = containers_result;
+                    self.cd.containers_last_check =
                         current_system_time_since_epoch().as_secs().to_string();
                 }
             } else {
@@ -627,10 +627,10 @@ impl MetricGenerator {
     /// Generate process metrics.
     fn gen_process_metrics(&mut self) {
         #[feature = "containers"]
-        if self.watch_containers {
+        if self.cd.watch_containers {
             let now = current_system_time_since_epoch().as_secs().to_string();
             if self.watch_docker && self.docker_client.is_some() {
-                let last_check = self.containers_last_check.clone();
+                let last_check = self.cd.containers_last_check.clone();
                 if last_check.is_empty() {
                     match self.docker_client.as_mut().unwrap().get_version() {
                         Ok(version_response) => {
@@ -658,7 +658,7 @@ impl MetricGenerator {
                         Err(err) => debug!("couldn't get docker events - {:?} - {}", err, err),
                     }
                 }
-                self.containers_last_check =
+                self.cd.containers_last_check =
                     current_system_time_since_epoch().as_secs().to_string();
             }
             if self.watch_kubernetes && self.kubernetes_client.is_some() {
@@ -686,13 +686,13 @@ impl MetricGenerator {
             let mut attributes = HashMap::new();
 
             #[cfg(feature = "containers")]
-            if self.watch_containers && (!self.containers.is_empty() || !self.pods.is_empty()) {
+            if self.cd.watch_containers && (!self.cd.containers.is_empty() || !self.pods.is_empty()) {
                 let container_data = self
                     .topology
                     .proc_tracker
                     .get_process_container_description(
                         pid,
-                        &self.containers,
+                        &self.cd.containers,
                         self.docker_version.clone(),
                         &self.pods,
                         //self.kubernetes_version.clone(),
