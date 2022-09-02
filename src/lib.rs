@@ -59,7 +59,7 @@ macro_rules! declare_exporters {
             if $header {
                 scaphandre_header($name);
             }
-            let mut exporter = <$exporter>::new(get_sensor(&$matches));
+            let mut exporter = <$exporter>::new(get_sensor(&$matches)); // FIXME
             exporter.run(exporter_parameters.clone());
     }
     )+}
