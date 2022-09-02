@@ -53,7 +53,7 @@ fn get_sensor(matches: &ArgMatches) -> Box<dyn Sensor> {
 }
 
 macro_rules! declare_exporters {
-    ($header:tt, $sensor_boxed:tt, $exporter_match_flag:tt, $($name:tt, $exporter:ty,)+) => {$(
+    ($header:tt, $sensor_boxed:tt, $exporter_match_flag:tt, $matches:tt, $($name:tt, $exporter:ty,)+) => {$(
         if let Some(exporter_parameters) = matches.subcommand_matches($name) {
             $exporter_match_flag = true;
             if $header {
@@ -81,7 +81,7 @@ pub fn run(matches: ArgMatches) {
         header = false;
     }
 
-    declare_exporters!(header,sensor_boxed,exporter_match_flag,
+    declare_exporters!(header,sensor_boxed,exporter_match_flag,matches,
         "stdout",
         StdoutExporter,
         "json",
@@ -98,6 +98,7 @@ pub fn run(matches: ArgMatches) {
         header,
         sensor_boxed,
         exporter_match_flag,
+        matches,
         "warp10",
         Warp10Exporter,
     );
