@@ -13,6 +13,7 @@ pub mod warpten;
 use crate::sensors::{utils::current_system_time_since_epoch, RecordGenerator, Topology};
 use chrono::Utc;
 use clap::ArgMatches;
+#[cfg(feature = "containers")]
 use docker_sync::{container::Container, Docker};
 #[cfg(feature = "containers")]
 use k8s_sync::{kubernetes::Kubernetes, Pod};
