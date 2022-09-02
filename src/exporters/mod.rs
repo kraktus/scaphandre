@@ -626,58 +626,55 @@ impl MetricGenerator {
 
     /// Generate process metrics.
     fn gen_process_metrics(&mut self) {
-        #[feature = "containers"]
-        {
-            if self.cd.watch_containers {
-                let now = current_system_time_since_epoch().as_secs().to_string();
-                if self.cd.watch_docker && self.cd.docker_client.is_some() {
-                    let last_check = self.cd.containers_last_check.clone();
-                    if last_check.is_empty() {
-                        match self.cd.docker_client.as_mut().unwrap().get_version() {
-                            Ok(version_response) => {
-                                self.docker_version =
-                                    String::from(version_response.Version.as_str());
+        #[cfg(feature = "containers")]
+        if self.cd.watch_containers {
+            let now = current_system_time_since_epoch().as_secs().to_string();
+            if self.cd.watch_docker && self.cd.docker_client.is_some() {
+                let last_check = self.cd.containers_last_check.clone();
+                if last_check.is_empty() {
+                    match self.cd.docker_client.as_mut().unwrap().get_version() {
+                        Ok(version_response) => {
+                            self.docker_version = String::from(version_response.Version.as_str());
+                            self.gen_docker_containers_basic_metadata();
+                        }
+                        Err(error) => {
+                            info!("Couldn't query the docker socket: {}", error);
+                            self.cd.watch_docker = false;
+                        }
+                    }
+                } else {
+                    match self
+                        .docker_client
+                        .as_mut()
+                        .unwrap()
+                        .get_events(Some(last_check), Some(now.clone()))
+                    {
+                        Ok(events) => {
+                            if !events.is_empty() {
                                 self.gen_docker_containers_basic_metadata();
-                            }
-                            Err(error) => {
-                                info!("Couldn't query the docker socket: {}", error);
-                                self.cd.watch_docker = false;
+                            } else {
                             }
                         }
-                    } else {
-                        match self
-                            .docker_client
-                            .as_mut()
-                            .unwrap()
-                            .get_events(Some(last_check), Some(now.clone()))
-                        {
-                            Ok(events) => {
-                                if !events.is_empty() {
-                                    self.gen_docker_containers_basic_metadata();
-                                } else {
-                                }
-                            }
-                            Err(err) => debug!("couldn't get docker events - {:?} - {}", err, err),
-                        }
+                        Err(err) => debug!("couldn't get docker events - {:?} - {}", err, err),
                     }
-                    self.cd.containers_last_check =
-                        current_system_time_since_epoch().as_secs().to_string();
                 }
-                if self.cd.watch_kubernetes && self.cd.kubernetes_client.is_some() {
-                    if self.cd.pods_last_check.is_empty() {
-                        self.gen_kubernetes_pods_basic_metadata();
-                        info!("First check done on pods.");
-                    }
-                    let last_check = self.cd.pods_last_check.clone();
-                    if (now.parse::<i32>().unwrap() - last_check.parse::<i32>().unwrap()) > 20 {
-                        info!(
-                            "Just refreshed pod list ! last: {} now: {}, diff: {}",
-                            last_check,
-                            now,
-                            (now.parse::<i32>().unwrap() - last_check.parse::<i32>().unwrap())
-                        );
-                        self.gen_kubernetes_pods_basic_metadata();
-                    }
+                self.cd.containers_last_check =
+                    current_system_time_since_epoch().as_secs().to_string();
+            }
+            if self.cd.watch_kubernetes && self.cd.kubernetes_client.is_some() {
+                if self.cd.pods_last_check.is_empty() {
+                    self.gen_kubernetes_pods_basic_metadata();
+                    info!("First check done on pods.");
+                }
+                let last_check = self.cd.pods_last_check.clone();
+                if (now.parse::<i32>().unwrap() - last_check.parse::<i32>().unwrap()) > 20 {
+                    info!(
+                        "Just refreshed pod list ! last: {} now: {}, diff: {}",
+                        last_check,
+                        now,
+                        (now.parse::<i32>().unwrap() - last_check.parse::<i32>().unwrap())
+                    );
+                    self.gen_kubernetes_pods_basic_metadata();
                 }
             }
         }
