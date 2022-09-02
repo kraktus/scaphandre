@@ -14,15 +14,16 @@ use crate::sensors::{utils::current_system_time_since_epoch, RecordGenerator, To
 use chrono::Utc;
 use clap::ArgMatches;
 #[cfg(feature = "containers")]
-use docker_sync::{container::Container, Docker};
-#[cfg(feature = "containers")]
-use k8s_sync::{kubernetes::Kubernetes, Pod};
-use std::collections::HashMap;
+{
+    use docker_sync::{container::Container, Docker};
+    use k8s_sync::{kubernetes::Kubernetes, Pod};
+    use std::collections::HashMap;
+    use utils::{get_docker_client, get_kubernetes_client};
+}
+
 use std::fmt;
 use std::time::Duration;
 use utils::get_scaphandre_version;
-#[cfg(feature = "containers")]
-use utils::{get_docker_client, get_kubernetes_client};
 
 /// General metric definition.
 #[derive(Debug)]
