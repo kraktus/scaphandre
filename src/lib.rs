@@ -53,13 +53,13 @@ fn get_sensor(matches: &ArgMatches) -> Box<dyn Sensor> {
 }
 
 macro_rules! declare_exporters {
-    ($header:tt, $sensor_boxed:tt, $exporter_match_flag:tt, $matches:tt, $($name:tt, $exporter:ty,)+) => {$(
+    ($header:tt, $exporter_match_flag:tt, $matches:tt, $($name:tt, $exporter:ty,)+) => {$(
         if let Some(exporter_parameters) = $matches.subcommand_matches($name) {
             $exporter_match_flag = true;
             if $header {
                 scaphandre_header($name);
             }
-            let mut exporter = <$exporter>::new($sensor_boxed);
+            let mut exporter = <$exporter>::new(get_sensor(&$matches));
             exporter.run(exporter_parameters.clone());
     }
     )+}
@@ -72,7 +72,7 @@ macro_rules! declare_exporters {
 pub fn run(matches: ArgMatches) {
     loggerv::init_with_verbosity(matches.occurrences_of("v")).unwrap();
 
-    let sensor_boxed = get_sensor(&matches);
+    //let sensor_boxed = get_sensor(&matches);
 
     let mut header = true;
     let mut exporter_match_flag = false;
@@ -80,7 +80,10 @@ pub fn run(matches: ArgMatches) {
         header = false;
     }
 
-    declare_exporters!(header,sensor_boxed,exporter_match_flag,matches,
+    declare_exporters!(
+        header,
+        exporter_match_flag,
+        matches,
         "stdout",
         StdoutExporter,
         "json",
