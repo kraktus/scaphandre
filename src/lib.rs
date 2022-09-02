@@ -55,7 +55,7 @@ fn get_sensor(matches: &ArgMatches) -> Box<dyn Sensor> {
 macro_rules! declare_exporters {
     ($header:tt, $sensor_boxed:tt, $exporter_match_flag:tt, $($name:tt, $exporter:ty,)+) => {$(
         if let Some(exporter_parameters) = matches.subcommand_matches($name) {
-            exporter_match_flag = true;
+            $exporter_match_flag = true;
             if $header {
                 scaphandre_header($name);
             }
