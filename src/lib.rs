@@ -9,9 +9,11 @@ pub mod exporters;
 pub mod sensors;
 use clap::ArgMatches;
 use colored::*;
+#[cfg(feature = "warp10")]
+use exporters::warpten::Warp10Exporter;
 use exporters::{
     json::JSONExporter, prometheus::PrometheusExporter, qemu::QemuExporter,
-    riemann::RiemannExporter, stdout::StdoutExporter, warpten::Warp10Exporter, Exporter,
+    riemann::RiemannExporter, stdout::StdoutExporter, Exporter,
 };
 use sensors::{powercap_rapl::PowercapRAPLSensor, Sensor};
 use std::collections::HashMap;
@@ -100,7 +102,7 @@ pub fn run(matches: ArgMatches) {
         exporter_parameters = qemu_exporter_parameters.clone();
         let mut exporter = QemuExporter::new(sensor_boxed);
         exporter.run(exporter_parameters);
-    } else if let Some(warp10_exporter_parameters) = matches.subcommand_matches("warp10") {
+    } else if cfg!(feature = "warp10") && let Some(warp10_exporter_parameters) = matches.subcommand_matches("warp10") {
         if header {
             scaphandre_header("warp10");
         }
@@ -136,10 +138,14 @@ pub fn get_exporters_options() -> HashMap<String, Vec<clap::Arg<'static, 'static
         String::from("qemu"),
         exporters::qemu::QemuExporter::get_options(),
     );
-    options.insert(
-        String::from("warp10"),
-        exporters::warpten::Warp10Exporter::get_options(),
-    );
+    #[cfg(feature = "warp10")]
+    {
+        options.insert(
+            String::from("warp10"),
+            exporters::warpten::Warp10Exporter::get_options(),
+        );
+    }
+
     options
 }
 
