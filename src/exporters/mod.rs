@@ -14,8 +14,8 @@ use crate::sensors::{utils::current_system_time_since_epoch, RecordGenerator, To
 use chrono::Utc;
 use clap::ArgMatches;
 use docker_sync::{container::Container, Docker};
-use k8s_sync::kubernetes::Kubernetes;
-use k8s_sync::Pod;
+#[cfg(feature = "containers")]
+use k8s_sync::{kubernetes::Kubernetes, Pod};
 use std::collections::HashMap;
 use std::fmt;
 use std::time::Duration;
@@ -590,6 +590,7 @@ impl MetricGenerator {
     /// to *self.cd.docker_client*. Stores the resulting vector as *self.cd.containers*.
     /// Updates *self.cd.containers_last_check* to the current timestamp, if the
     /// operation is successful.
+    #[cfg(feature = "containers")]
     fn gen_docker_containers_basic_metadata(&mut self) {
         if self.cd.watch_docker && self.cd.docker_client.is_some() {
             if let Some(docker) = self.cd.docker_client.as_mut() {
@@ -608,6 +609,7 @@ impl MetricGenerator {
     /// queries the local kubernetes API (if this is a kubernetes cluster node)
     /// and retrieves the list of pods running on this node, thanks to *self.cd.kubernetes_client*.
     /// Stores the result as *self.cd.pods* and updates *self.cd.pods_last_check* if the operation is successfull.
+    #[cfg(feature = "containers")]
     fn gen_kubernetes_pods_basic_metadata(&mut self) {
         if self.cd.watch_kubernetes {
             if let Some(kubernetes) = self.cd.kubernetes_client.as_mut() {
