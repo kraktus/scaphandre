@@ -17,10 +17,10 @@ use clap::ArgMatches;
 use {
     docker_sync::{container::Container, Docker},
     k8s_sync::{kubernetes::Kubernetes, Pod},
-    std::collections::HashMap,
     utils::{get_docker_client, get_kubernetes_client},
 };
 
+use std::collections::HashMap;
 use std::fmt;
 use std::time::Duration;
 use utils::get_scaphandre_version;
