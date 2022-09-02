@@ -6,6 +6,7 @@ pub mod json;
 pub mod prometheus;
 pub mod qemu;
 pub mod riemann;
+#[cfg(feature = "containers")]
 pub mod stdout;
 pub mod utils;
 #[cfg(feature = "warp10")]
