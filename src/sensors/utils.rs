@@ -1,4 +1,6 @@
+#[cfg(feature = "containers")]
 use docker_sync::container::Container;
+#[cfg(feature = "containers")]
 use k8s_sync::Pod;
 use procfs::process::Process;
 use regex::Regex;
@@ -174,6 +176,7 @@ impl ProcessTracker {
     /// currently running docker containers on the machine.
     /// The *pods* slice contains the [Pod] items referencing currently
     /// running pods on the machine if it is a kubernetes cluster node.
+    #[cfg(feature = "containers")]
     pub fn get_process_container_description(
         &self,
         pid: i32,

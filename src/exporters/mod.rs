@@ -6,7 +6,6 @@ pub mod json;
 pub mod prometheus;
 pub mod qemu;
 pub mod riemann;
-#[cfg(feature = "containers")]
 pub mod stdout;
 pub mod utils;
 #[cfg(feature = "warp10")]
@@ -20,7 +19,9 @@ use k8s_sync::Pod;
 use std::collections::HashMap;
 use std::fmt;
 use std::time::Duration;
-use utils::{get_docker_client, get_kubernetes_client, get_scaphandre_version};
+#[cfg(feature = "containers")]
+use utils::{get_docker_client, get_kubernetes_client};
+use utils::get_scaphandre_version;
 
 /// General metric definition.
 #[derive(Debug)]
@@ -154,6 +155,7 @@ impl MetricGenerator {
         let mut docker_client = None;
         //let kubernetes_version = String::from("");
         let mut kubernetes_client = None;
+        #[cfg(feature = "containers")]
         if watch_containers {
             let mut container_runtime = false;
             match get_docker_client() {
@@ -612,6 +614,7 @@ impl MetricGenerator {
 
     /// Generate process metrics.
     fn gen_process_metrics(&mut self) {
+        #[feature = "containers"]
         if self.watch_containers {
             let now = current_system_time_since_epoch().as_secs().to_string();
             if self.watch_docker && self.docker_client.is_some() {
@@ -670,6 +673,7 @@ impl MetricGenerator {
 
             let mut attributes = HashMap::new();
 
+            #[cfg(feature = "containers")]
             if self.watch_containers && (!self.containers.is_empty() || !self.pods.is_empty()) {
                 let container_data = self
                     .topology

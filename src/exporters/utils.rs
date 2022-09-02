@@ -2,7 +2,9 @@
 //!
 //! The utils module provides common functions used by the exporters.
 use clap::crate_version;
+#[cfg(feature = "containers")]
 use docker_sync::Docker;
+#[cfg(feature = "containers")]
 use k8s_sync::{errors::KubernetesError, kubernetes::Kubernetes};
 
 /// Returns an Option containing the VM name of a qemu process.
@@ -83,6 +85,7 @@ mod tests {
     }
 }
 
+#[cfg(feature = "containers")]
 pub fn get_docker_client() -> Result<Docker, std::io::Error> {
     let docker = match Docker::connect() {
         Ok(docker) => docker,
@@ -91,6 +94,7 @@ pub fn get_docker_client() -> Result<Docker, std::io::Error> {
     Ok(docker)
 }
 
+#[cfg(feature = "containers")]
 pub fn get_kubernetes_client() -> Result<Kubernetes, KubernetesError> {
     match Kubernetes::connect(
         Some(String::from("/root/.kube/config")),
