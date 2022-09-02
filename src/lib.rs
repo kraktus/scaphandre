@@ -81,7 +81,7 @@ pub fn run(matches: ArgMatches) {
         header = false;
     }
 
-    declare_exporters!(header,sensor_boxed,exporter_match_flag
+    declare_exporters!(header,sensor_boxed,exporter_match_flag,
         "stdout",
         StdoutExporter,
         "json",
