@@ -59,7 +59,6 @@ macro_rules! declare_exporters {
             if header {
                 scaphandre_header($name);
             }
-            exporter_parameters = stdout_exporter_parameters.clone();
             let mut exporter = $exporter::new(sensor_boxed);
             exporter.run(exporter_parameters);
     }
