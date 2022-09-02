@@ -83,14 +83,19 @@ pub fn run(matches: ArgMatches) {
     }
 
     declare_exporters!(
-        ("stdout", StdoutExporter),
-        ("json", JSONExporter),
-        ("riemann", RiemannExporter),
-        ("prometheus", PrometheusExporter),
-        ("qemu", Warp10Exporter),
+        "stdout",
+        StdoutExporter,
+        "json",
+        JSONExporter,
+        "riemann",
+        RiemannExporter,
+        "prometheus",
+        PrometheusExporter,
+        "qemu",
+        Warp10Exporter,
     );
     #[cfg(feature = "warp10")]
-    declare_exporters!(("warp10", QemuExporter),);
+    declare_exporters!("warp10", QemuExporter,);
     if !exporter_match_flag {
         error!("Couldn't determine which exporter has been chosen.");
     }
