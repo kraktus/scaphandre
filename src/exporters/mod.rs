@@ -19,9 +19,9 @@ use k8s_sync::Pod;
 use std::collections::HashMap;
 use std::fmt;
 use std::time::Duration;
+use utils::get_scaphandre_version;
 #[cfg(feature = "containers")]
 use utils::{get_docker_client, get_kubernetes_client};
-use utils::get_scaphandre_version;
 
 /// General metric definition.
 #[derive(Debug)]
@@ -112,6 +112,12 @@ struct MetricGenerator {
     hostname: String,
     /// Tells MetricGenerator if it has to watch for qemu virtual machines.
     qemu: bool,
+    #[cfg(feature = "containers")]
+    cd: ContainerData,
+}
+
+#[cfg(feature = "containers")]
+struct ContainerData {
     /// Tells MetricGenerator if it has to watch for containers.
     watch_containers: bool,
     ///
@@ -149,50 +155,56 @@ impl MetricGenerator {
         watch_containers: bool,
     ) -> MetricGenerator {
         let data = Vec::new();
-        let containers = vec![];
-        let pods = vec![];
-        let docker_version = String::from("");
-        let mut docker_client = None;
-        //let kubernetes_version = String::from("");
-        let mut kubernetes_client = None;
         #[cfg(feature = "containers")]
-        if watch_containers {
-            let mut container_runtime = false;
-            match get_docker_client() {
-                Ok(docker) => {
-                    docker_client = Some(docker);
+        {
+            let containers = vec![];
+            let pods = vec![];
+            let docker_version = String::from("");
+            let mut docker_client = None;
+            //let kubernetes_version = String::from("");
+            let mut kubernetes_client = None;
+            if watch_containers {
+                let mut container_runtime = false;
+                match get_docker_client() {
+                    Ok(docker) => {
+                        docker_client = Some(docker);
+                        container_runtime = true;
+                    }
+                    Err(err) => {
+                        info!("Couldn't connect to docker socket. Error: {}", err);
+                    }
+                }
+                if let Ok(kubernetes) = get_kubernetes_client() {
+                    kubernetes_client = Some(kubernetes);
                     container_runtime = true;
+                } else {
+                    info!("Couldn't connect to kubernetes API.");
                 }
-                Err(err) => {
-                    info!("Couldn't connect to docker socket. Error: {}", err);
+                if !container_runtime {
+                    warn!("--containers was used but scaphandre couldn't connect to any container runtime.");
                 }
             }
-            if let Ok(kubernetes) = get_kubernetes_client() {
-                kubernetes_client = Some(kubernetes);
-                container_runtime = true;
-            } else {
-                info!("Couldn't connect to kubernetes API.");
-            }
-            if !container_runtime {
-                warn!("--containers was used but scaphandre couldn't connect to any container runtime.");
+            let cd = ContainerData {
+                watch_containers,
+                containers_last_check: String::from(""),
+                pods_last_check: String::from("")
+                containers,
+                docker_version,
+                docker_client,
+                watch_docker: true,
+                watch_kubernetes: true,
+                kubernetes_client,
+                pods
             }
         }
+
         MetricGenerator {
             data,
             topology,
             hostname,
-            containers,
             qemu,
-            containers_last_check: String::from(""),
-            docker_version,
-            docker_client,
-            watch_containers,
-            watch_docker: true,
-            kubernetes_client,
-            watch_kubernetes: true,
-            pods,
-            pods_last_check: String::from(""),
-            //kubernetes_version,
+            #[cfg(feature = "containers")]
+            cd
         }
     }
 
