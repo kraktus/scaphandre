@@ -585,14 +585,14 @@ impl MetricGenerator {
         }
     }
 
-    /// If *self.cd.watch_docker* is true and *self.docker_client* is Some
+    /// If *self.cd.watch_docker* is true and *self.cd.docker_client* is Some
     /// gets the list of docker containers running on the machine, thanks
-    /// to *self.docker_client*. Stores the resulting vector as *self.cd.containers*.
+    /// to *self.cd.docker_client*. Stores the resulting vector as *self.cd.containers*.
     /// Updates *self.cd.containers_last_check* to the current timestamp, if the
     /// operation is successful.
     fn gen_docker_containers_basic_metadata(&mut self) {
-        if self.cd.watch_docker && self.docker_client.is_some() {
-            if let Some(docker) = self.docker_client.as_mut() {
+        if self.cd.watch_docker && self.cd.docker_client.is_some() {
+            if let Some(docker) = self.cd.docker_client.as_mut() {
                 if let Ok(containers_result) = docker.get_containers(false) {
                     self.cd.containers = containers_result;
                     self.cd.containers_last_check =
@@ -630,10 +630,10 @@ impl MetricGenerator {
         {
             if self.cd.watch_containers {
                 let now = current_system_time_since_epoch().as_secs().to_string();
-                if self.cd.watch_docker && self.docker_client.is_some() {
+                if self.cd.watch_docker && self.cd.docker_client.is_some() {
                     let last_check = self.cd.containers_last_check.clone();
                     if last_check.is_empty() {
-                        match self.docker_client.as_mut().unwrap().get_version() {
+                        match self.cd.docker_client.as_mut().unwrap().get_version() {
                             Ok(version_response) => {
                                 self.docker_version =
                                     String::from(version_response.Version.as_str());
