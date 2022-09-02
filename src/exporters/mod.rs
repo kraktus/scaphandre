@@ -627,7 +627,7 @@ impl MetricGenerator {
     /// Generate process metrics.
     fn gen_process_metrics(&mut self) {
         #[feature = "containers"]
-        if self.cd.watch_containers {
+        {if self.cd.watch_containers {
             let now = current_system_time_since_epoch().as_secs().to_string();
             if self.cd.watch_docker && self.docker_client.is_some() {
                 let last_check = self.cd.containers_last_check.clone();
@@ -677,7 +677,7 @@ impl MetricGenerator {
                     self.gen_kubernetes_pods_basic_metadata();
                 }
             }
-        }
+        }}
 
         for pid in self.topology.proc_tracker.get_alive_pids() {
             let exe = self.topology.proc_tracker.get_process_name(pid);
