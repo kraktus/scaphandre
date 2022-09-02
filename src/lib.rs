@@ -53,13 +53,13 @@ fn get_sensor(matches: &ArgMatches) -> Box<dyn Sensor> {
 }
 
 macro_rules! declare_exporters {
-    ($($name:tt, $exporter:ty,)+) => {$(
+    ($header:tt, $sensor_boxed:tt, $exporter_match_flag:tt, $($name:tt, $exporter:ty,)+) => {$(
         if let Some(exporter_parameters) = matches.subcommand_matches($name) {
             exporter_match_flag = true;
-            if header {
+            if $header {
                 scaphandre_header($name);
             }
-            let mut exporter = $exporter::new(sensor_boxed);
+            let mut exporter = $exporter::new($sensor_boxed);
             exporter.run(exporter_parameters);
     }
     )+}
@@ -81,7 +81,7 @@ pub fn run(matches: ArgMatches) {
         header = false;
     }
 
-    declare_exporters!(
+    declare_exporters!(header,sensor_boxed,exporter_match_flag
         "stdout",
         StdoutExporter,
         "json",
@@ -94,7 +94,13 @@ pub fn run(matches: ArgMatches) {
         QemuExporter,
     );
     #[cfg(feature = "warp10")]
-    declare_exporters!("warp10", Warp10Exporter,);
+    declare_exporters!(
+        header,
+        sensor_boxed,
+        exporter_match_flag,
+        "warp10",
+        Warp10Exporter,
+    );
     if !exporter_match_flag {
         error!("Couldn't determine which exporter has been chosen.");
     }
