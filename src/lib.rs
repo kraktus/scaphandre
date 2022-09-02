@@ -73,7 +73,6 @@ pub fn run(matches: ArgMatches) {
     loggerv::init_with_verbosity(matches.occurrences_of("v")).unwrap();
 
     let sensor_boxed = get_sensor(&matches);
-    let exporter_parameters;
 
     let mut header = true;
     let mut exporter_match_flag = false;
