@@ -9,9 +9,11 @@ pub mod exporters;
 pub mod sensors;
 use clap::ArgMatches;
 use colored::*;
+#[cfg(feature = "warp10")]
+use exporters::warpten::Warp10Exporter;
 use exporters::{
     json::JSONExporter, prometheus::PrometheusExporter, qemu::QemuExporter,
-    riemann::RiemannExporter, stdout::StdoutExporter, warpten::Warp10Exporter, Exporter,
+    riemann::RiemannExporter, stdout::StdoutExporter, Exporter,
 };
 use sensors::{powercap_rapl::PowercapRAPLSensor, Sensor};
 use std::collections::HashMap;
@@ -86,8 +88,9 @@ pub fn run(matches: ArgMatches) {
         ("riemann", RiemannExporter),
         ("prometheus", PrometheusExporter),
         ("qemu", Warp10Exporter),
-        ("warp10", QemuExporter),
     );
+    #[cfg(feature = "warp10")]
+    declare_exporters!(("warp10", QemuExporter),);
     if !exporter_match_flag {
         error!("Couldn't determine which exporter has been chosen.");
     }
@@ -117,10 +120,14 @@ pub fn get_exporters_options() -> HashMap<String, Vec<clap::Arg<'static, 'static
         String::from("qemu"),
         exporters::qemu::QemuExporter::get_options(),
     );
-    options.insert(
-        String::from("warp10"),
-        exporters::warpten::Warp10Exporter::get_options(),
-    );
+    #[cfg(feature = "warp10")]
+    {
+        options.insert(
+            String::from("warp10"),
+            exporters::warpten::Warp10Exporter::get_options(),
+        );
+    }
+
     options
 }
 
