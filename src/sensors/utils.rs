@@ -1,11 +1,8 @@
-#[cfg(feature = "containers")]
-use docker_sync::container::Container;
-#[cfg(feature = "containers")]
-use k8s_sync::Pod;
 use procfs::process::Process;
 use regex::Regex;
-use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
+#[cfg(feature = "containers")]
+use {docker_sync::container::Container, k8s_sync::Pod, std::collections::HashMap};
 
 #[derive(Debug, Clone)]
 /// Manages ProcessRecord instances.
